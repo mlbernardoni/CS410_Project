@@ -111,6 +111,7 @@ void CorpusClass::build_vocabulary()
 }
 void CorpusClass::initialize_prob()
 {
+    srand(static_cast<unsigned int>(std::time(nullptr))); 
     //vector<vector<double>> DocTopicProb;
     // doc topic prob
     for(int i = 0; i < DocumentNumber; i++)
@@ -120,8 +121,8 @@ void CorpusClass::initialize_prob()
         int yy;
         for(yy = 0; yy < number_of_topics; yy++)
         {
-            double newprob = 1;
-            //double newprob = (double)rand()/RAND_MAX; //$$$$
+            //double newprob = 1;
+            double newprob = (double)rand()/RAND_MAX; 
             probsum += newprob;
             prob.push_back(newprob);
         }
@@ -140,8 +141,8 @@ void CorpusClass::initialize_prob()
         int yy;
         for(yy = 0; yy < VocublarySize; yy++)
         {
-            //double newprob = (double)rand()/RAND_MAX; //$$$$
-            double newprob = 1;
+            double newprob = (double)rand()/RAND_MAX; 
+            //double newprob = 1;
             probsum += newprob;
             prob.push_back(newprob);
         }
@@ -194,18 +195,20 @@ void CorpusClass::run_iteration()
 {
     //cout << "E Step \n";
     //cout << "Allocated doc array \n";
+    // IS THIS EVEN NECESSARY?
+    /*
     for (int i = 0; i < DocumentNumber; i++)
     {
         double** ptopicarray = pdocarray[i];
         for (int ii = 0; ii < number_of_topics; ii++)
-        {
+        {F
             double* pwordarray = ptopicarray[ii];
             for (int iii = 0; iii < VocublarySize; iii++)
-                pwordarray[iii] = 0;
+                pwordarray[iii] = 1;
         }
     }
     cout << "E Initialization Complete \n";
-    
+    */
     for(int docindex = 0; docindex < DocumentNumber; docindex++)
     {
         //cout << "E Doc \n";
@@ -353,10 +356,10 @@ void CorpusClass::PLSA()
 
 int main () {
     CorpusClass corpus;
-    corpus.document_path = "data/DBLP2.txt";
-    //corpus.document_path = "data/test.txt";
+    //corpus.document_path = "data/DBLP2.txt";
+    corpus.document_path = "data/test.txt";
     corpus.number_of_topics = 2;
-    corpus.max_iterations = 50;
+    corpus.max_iterations = 500;
     corpus.epsilon = 0.001;
     
     corpus.build_vocabulary();

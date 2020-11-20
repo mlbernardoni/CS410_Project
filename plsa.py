@@ -132,8 +132,11 @@ class Corpus(object):
         # ############################
         #np.random.random_sample((3, 2)) 
         """
+        np.random.RandomState()
         self.document_topic_prob = np.random.random_sample((self.number_of_documents, number_of_topics))
+        #print(self.document_topic_prob)
         self.document_topic_prob = normalize(self.document_topic_prob)
+        #print(self.document_topic_prob)
         #print(self.document_topic_prob)
 
         self.topic_word_prob = np.random.random_sample((number_of_topics, len(self.vocabulary)))
@@ -175,7 +178,7 @@ class Corpus(object):
     def maximization_step(self, number_of_topics):
         print("E step:")
         
-        self.topic_prob = np.ones((self.number_of_documents, number_of_topics, self.vocabulary_size))
+        #self.topic_prob = np.ones((self.number_of_documents, number_of_topics, self.vocabulary_size))
         for docindex in range(0, self.number_of_documents):
             for wordindex in range(0, self.vocabulary_size):
                 mysum = 0
@@ -231,13 +234,14 @@ class Corpus(object):
         # your code here
         # ############################
         """
+        """
         #print (self.document_topic_prob)
         #print (self.topic_word_prob)
         #print (self.term_doc_matrix)
         Matrix_result = np.matmul(self.document_topic_prob, self.topic_word_prob)
         #print (Matrix_result)
-        #arr_result = np.sum(Matrix_result, axis = 0)
-        arr_result = Matrix_result[0]
+        arr_result = np.sum(Matrix_result, axis = 0)
+        #arr_result = Matrix_result[0]
         #print (arr_result)
         #arr_result1 = np.sum(Matrix_result, axis = 1)
         #print (arr_result1)
@@ -275,6 +279,24 @@ class Corpus(object):
         self.likelihoods.append(new_likelihood)
         
         #return 
+        """
+        newlikely = 0
+        #print(self.document_topic_prob)
+        #print(self.topic_word_prob)
+        for docindex in range(0, self.number_of_documents):
+            docsum = 0
+            for wordindex in range(0, self.vocabulary_size):
+                mysum = 0
+                for topicindex in range(0, number_of_topics):
+                    mysum += self.document_topic_prob[docindex][topicindex] * self.topic_word_prob[topicindex][wordindex]
+                mysum = math.log10(mysum)
+                mysum = mysum * self.term_doc_matrix[docindex][wordindex]
+                docsum += mysum
+            #print(docsum)
+            newlikely += docsum
+        self.likelihoods.append(newlikely)
+        
+
 
     def plsa(self, number_of_topics, max_iter, epsilon):
 
@@ -292,7 +314,7 @@ class Corpus(object):
         self.topic_prob = np.zeros([self.number_of_documents, number_of_topics, self.vocabulary_size], dtype=np.float)
 
         # P(z | d) P(w | z)
-        self.initialize(number_of_topics, random=False)
+        self.initialize(number_of_topics, random=True)
 
         # Run the EM algorithm
         self.calculate_likelihood(number_of_topics)
@@ -334,8 +356,8 @@ class Corpus(object):
 
 
 def main():
-    #documents_path = 'data/test.txt'
-    documents_path = 'data/DBLP.txt'
+    documents_path = 'data/test.txt' 
+    #documents_path = 'data/DBLP2.txt'
     #documents_path = 'data/test5.txt'
     corpus = Corpus(documents_path)  # instantiate corpus
     #corpus.build_corpus()
@@ -346,8 +368,8 @@ def main():
     #corpus.build_term_doc_matrix()  # testing only REMOVE
     number_of_topics = 2
     #max_iterations = 500
-    max_iterations = 50
-    epsilon = 0.000
+    max_iterations = 500
+    epsilon = 0.001
     corpus.plsa(number_of_topics, max_iterations, epsilon)
 
 

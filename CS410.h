@@ -4,6 +4,7 @@
 #include <fstream>
 #include <sstream>      // std::istringstream
 #include <math.h>
+#include <ctime>
 #include "HashTable.h"
 
 using namespace std;
