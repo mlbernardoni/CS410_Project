@@ -1,0 +1,1 @@
+g++ cs410.cpp -o cs410.exe

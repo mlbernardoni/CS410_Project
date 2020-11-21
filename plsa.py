@@ -38,20 +38,6 @@ class Corpus(object):
         self.number_of_documents = 0
         self.vocabulary_size = 0
 
-    def build_corpus(self): # NOT USED, DID IT ALL IN 1 FUNCTION build_vocabulary
-        return
-        """
-        Read document, fill in self.documents, a list of list of word
-        self.documents = [["the", "day", "is", "nice", "the", ...], [], []...]
-        
-        Update self.number_of_documents
-        # #############################
-        # your code here
-        # #############################
-        """
-               
-       
-        #pass    # REMOVE THIS
 
     def build_vocabulary(self):
         """
@@ -59,9 +45,6 @@ class Corpus(object):
         for example: ["rain", "the", ...]
 
         Update self.vocabulary_size
-        # #############################
-        # your code here
-        # #############################
         """
         
         vocab = dict()
@@ -90,9 +73,6 @@ class Corpus(object):
         and each column represents a vocabulary term.
 
         self.term_doc_matrix[i][j] is the count of term j in document i
-        # ############################
-        # your code here
-        # ############################
         """
         doccount = 0
         mymatrix = []
@@ -127,9 +107,6 @@ class Corpus(object):
 
         Don't forget to normalize! 
         HINT: you will find numpy's random matrix useful [https://docs.scipy.org/doc/numpy-1.15.0/reference/generated/numpy.random.random.html]
-        # ############################
-        # your code here
-        # ############################
         #np.random.random_sample((3, 2)) 
         """
         np.random.RandomState()
@@ -162,21 +139,16 @@ class Corpus(object):
     def initialize(self, number_of_topics, random=False):
         """ Call the functions to initialize the matrices document_topic_prob and topic_word_prob
         """
-        print("Initializing...")
+        #print("Initializing...")
 
         if random:
             self.initialize_randomly(number_of_topics)
         else:
             self.initialize_uniformly(number_of_topics)
 
-    def expectation_step(self, number_of_topics):
-        """ The E-step updates P(z | w, d)
-        """
-        return;
-                
 
-    def maximization_step(self, number_of_topics):
-        print("E step:")
+    def iterate(self, number_of_topics):
+        #print("E step:")
         
         #self.topic_prob = np.ones((self.number_of_documents, number_of_topics, self.vocabulary_size))
         for docindex in range(0, self.number_of_documents):
@@ -189,7 +161,7 @@ class Corpus(object):
                 for topicindex in range(0, number_of_topics):
                     self.topic_prob[docindex,topicindex,wordindex] = self.topic_prob[docindex,topicindex,wordindex] / mysum
 
-        print("M step:")
+        #print("M step:")
         for docindex in range(0, self.number_of_documents):
             for topicindex in range(0, number_of_topics):
                 mysum = 0
@@ -227,59 +199,7 @@ class Corpus(object):
                 multiply Prob of that topic * prob of that word in topic
         log of this
                 
-        look up np matrix multplication
-        
-        Then sum over docs
-        # ############################
-        # your code here
-        # ############################
-        """
-        """
-        #print (self.document_topic_prob)
-        #print (self.topic_word_prob)
-        #print (self.term_doc_matrix)
-        Matrix_result = np.matmul(self.document_topic_prob, self.topic_word_prob)
-        #print (Matrix_result)
-        arr_result = np.sum(Matrix_result, axis = 0)
-        #arr_result = Matrix_result[0]
-        #print (arr_result)
-        #arr_result1 = np.sum(Matrix_result, axis = 1)
-        #print (arr_result1)
-        arr_likelyhood = np.log10(arr_result)
-       
-        # sum the rows
-        #arr_result = np.log10(Matrix_result)
-        #arr_likelyhood = np.sum(arr_result, axis = 0)
-        
-        #print (arr_result)
-        #print (self.term_doc_matrix)
-        # log the sums
-        #arr_likelyhood = np.log10(arr_result)
-        #arr_likelyhood = np.log10(arr_result)
-        #print (arr_likelyhood)
-        #print (self.term_doc_matrix)
-        # multiply by counts
-        #self.likelihoods = np.matmul(arr_likelyhood.transpose(), self.term_doc_matrix)
-        newlikelihoods = []
-        for docindex in range(0, self.number_of_documents):
-            #docscore = np.matmul(arr_likelyhood, self.term_doc_matrix[docindex])
-            #docscore = np.multiply(arr_likelyhood, self.term_doc_matrix[docindex])
-            docscore = np.multiply(arr_likelyhood, self.term_doc_matrix[docindex])
-            #print(self.term_doc_matrix[docindex])
-            #print(arr_likelyhood)
-            #print(docscore)
-            docscore = np.sum(docscore)
-            #print(docscore)
-            newlikelihoods.append(docscore)
-        #print(newlikelihoods)
-        #print(self.likelihoods)
-        #self.likelihoods = np.matmul(arr_likelyhood, self.term_doc_matrix)
-        new_likelihood = np.sum(newlikelihoods)
-        #print(new_likelihood)
-        self.likelihoods.append(new_likelihood)
-        
-        #return 
-        """
+       """
         newlikely = 0
         #print(self.document_topic_prob)
         #print(self.topic_word_prob)
@@ -322,45 +242,29 @@ class Corpus(object):
         current_likelihood = self.likelihoods[-1]
 
         for iteration in range(0, max_iter):
-            print("Iteration #" + str(iteration + 1) + "...")
-            self.expectation_step(number_of_topics)
-            self.maximization_step(number_of_topics)
+            self.iterate(number_of_topics)
             self.calculate_likelihood(number_of_topics)
             
             new_likelihood = self.likelihoods[-1]
-            print(current_likelihood)
-            print(new_likelihood)
+            #print(current_likelihood)
+            #print(new_likelihood)
             #return
             newepsilon = abs(new_likelihood - current_likelihood)
             #print(newepsilon)
             if (newepsilon <= epsilon):
                 #return
+                print("Iteration #" + str(iteration + 1) + "...")
                 print("Converge")
                 break
             current_likelihood = new_likelihood
 
-            """
-            # ############################
-            # your code here
-            # ############################
-
-            pass    # REMOVE THIS
-            """
-        #print("Document/Topic")
-        #for index in range(0, 15):
-            #print(self.document_topic_prob[index])
-        #print("Topic/Word")
-        #print(self.topic_word_prob)
-        
-
-
+       
 
 def main():
     documents_path = 'data/test.txt' 
     #documents_path = 'data/DBLP2.txt'
     #documents_path = 'data/test5.txt'
     corpus = Corpus(documents_path)  # instantiate corpus
-    #corpus.build_corpus()
     corpus.build_vocabulary()
     #print(corpus.vocabulary)
     print("Vocabulary size:" + str(len(corpus.vocabulary)))
@@ -371,7 +275,8 @@ def main():
     max_iterations = 500
     epsilon = 0.001
     corpus.plsa(number_of_topics, max_iterations, epsilon)
-
+    print (corpus.document_topic_prob)
+    print (corpus.topic_word_prob)
 
 
 if __name__ == '__main__':
