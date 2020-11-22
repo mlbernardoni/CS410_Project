@@ -6,6 +6,10 @@
 #include <math.h>
 #include <ctime>
 #include "HashTable.h"
+#include <filesystem>
+#include <stdio.h>
+#include <dirent.h>
+#include <cstring>
 
 using namespace std;
 
