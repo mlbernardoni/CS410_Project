@@ -1,1 +1,3 @@
+cd c:\programs\cs410_project
+
 g++ cs410.cpp -o cs410.exe

@@ -3,6 +3,13 @@
 #include "CS410.h"
 #include <dirent.h>
 
+char const *pbadchar = ",;.!-:@[](){}_*/\'\"\?\\";
+void removeCharsFromString( string &str, const char* charsToRemove ) {
+   for ( unsigned int i = 0; i < strlen(charsToRemove); ++i ) {
+      str.erase( remove(str.begin(), str.end(), charsToRemove[i]), str.end() );
+   }
+}
+
 
 /*
     Constructor
@@ -23,15 +30,43 @@ CorpusClass::~CorpusClass() {
 void CorpusClass::build_vocabulary()
 {
     string datadate = "2000.11.05";
-    string datadir = "c:\\programs\\CS410_Pres_cleanalpha";
+    string datadir = "c:\\programs\\CS410_Pres_raw";
     string myfile;
+    map <string, int> stopwords;
+    fstream stopfile;
+    stopfile.open("stopwords.txt",ios::in); //open a file to perform read operation using file object
+    if (stopfile.is_open()) //checking whether the file is open
+    {   
+        string tp; 
+        while(getline(stopfile, tp)) //read data from file object and put it into string.
+        {
+            istringstream iss(tp);
+            vector<string> results(istream_iterator<string>{iss}, istream_iterator<string>());      
+            for (vector<string>::iterator wordit = results.begin() ; wordit != results.end(); ++wordit)
+            {
+                string newword = *wordit;
+                transform(newword.begin(), newword.end(), newword.begin(), ::tolower);
+                map <string, int>::iterator  mapit;
+                mapit = stopwords.find(newword);
+                if (mapit != stopwords.end())
+                {
+                    mapit->second++;
+                }
+                else
+                {
+                    stopwords.insert(make_pair(newword, 1));
+                }
+            }
+        }
+    }
+    int stopsize = stopwords.size();
+    cout << "Stop Size: " << stopsize << "\n";
 
 
     struct dirent *entry = nullptr;
     DIR *dp = nullptr;
     DocumentNumber = 0;
     VocabularyMap.clear();
-    DocumentWordMatrix.clear();
     
     //int count = 0;
     dp = opendir(datadir.c_str());
@@ -58,20 +93,24 @@ void CorpusClass::build_vocabulary()
                         {
                             //std::cout << ' ' << *it; 
                             // update vocabulary map
-                            string newline = *wordit;
-                            std::string::size_type pos = newline.find(',');
-                            string newword = newline.substr(0, pos);
+                            string newword = *wordit;
+                            removeCharsFromString(newword, pbadchar);
+                            transform(newword.begin(), newword.end(), newword.begin(), ::tolower);
                             map <string, int>::iterator  mapit;
-                            mapit = VocabularyMap.find(newword);
-                            if (mapit != VocabularyMap.end())
+                            mapit = stopwords.find(newword);
+                            if (mapit == stopwords.end())
                             {
-                                mapit->second++;
+                                map <string, int>::iterator  mapit;
+                                mapit = VocabularyMap.find(newword);
+                                if (mapit != VocabularyMap.end())
+                                {
+                                    mapit->second++;
+                                }
+                                else
+                                {
+                                    VocabularyMap.insert(make_pair(newword, 1));
+                                }
                             }
-                            else
-                            {
-                                VocabularyMap.insert(make_pair(newword, 1));
-                            }
-                            
                         }
                     }
 
@@ -103,50 +142,55 @@ void CorpusClass::build_vocabulary()
                 {   
                     string tp;
                     
-                    map <string, int> docwords;
                     while(getline(newfile, tp)) //read data from file object and put it into string.
                     {
                         //cout << tp << "\n"; //print the data of the string
                         //cout << "oy \n";
+                        map <string, int> docwords;
                         istringstream iss(tp);
-                        vector<string> results(istream_iterator<string>{iss}, istream_iterator<string>());                         
+                        vector<string> results(istream_iterator<string>{iss}, istream_iterator<string>());      
                         map <string, int>::iterator  mapit;
                         for (vector<string>::iterator wordit = results.begin() ; wordit != results.end(); ++wordit)
                         {
-                            string newline = *wordit;
-                            std::string::size_type pos = newline.find(',');
-                            string newword = newline.substr(0, pos);
-                            mapit = docwords.find(newword);
+                            string newword = *wordit;
+                            transform(newword.begin(), newword.end(), newword.begin(), ::tolower);
+                            removeCharsFromString(newword, pbadchar);
+                            map <string, int>::iterator  mapit;
+                            mapit = stopwords.find(newword);
+                                if (mapit == stopwords.end())
+                                {
+                                mapit = docwords.find(*wordit);
+                                if (mapit != docwords.end())
+                                {
+                                    mapit->second++;
+                                    //cout << "OY " << mapit->second << "\n";
+                                }
+                                else
+                                {
+                                    docwords.insert(make_pair(*wordit, 1));
+                                }
+                            }
+                        }
+                        //cout << "Words in this doc: " << docwords.size() << "\n";
+                        //DocumentWords.push_back(docwords);
+                        vector<int> wordcount;
+                        // for each word
+                        for (map <string, int>::iterator wordit = VocabularyMap.begin() ; wordit != VocabularyMap.end(); ++wordit)
+                        {
+                            map <string, int>::iterator  mapit;
+                            int vocabcount = 0;
+                            mapit = docwords.find(wordit->first);
                             if (mapit != docwords.end())
                             {
-                                mapit->second++;
-                                //cout << "OY " << mapit->second << "\n";
+                                vocabcount = mapit->second;
                             }
-                            else
-                            {
-                                docwords.insert(make_pair(newword, 1));
-                            }
+                            wordcount.push_back(vocabcount);
+                            //cout << "word Count: " << vocabcount << "\n";
                         }
+                        //cout << "words: " << wordcount.size() << "\n";
+                        DocumentWordMatrix.push_back(wordcount);
                      }
 
-                    //cout << "Words in this doc: " << docwords.size() << "\n";
-                    //DocumentWords.push_back(docwords);
-                    vector<int> wordcount;
-                    // for each word
-                    for (map <string, int>::iterator wordit = VocabularyMap.begin() ; wordit != VocabularyMap.end(); ++wordit)
-                    {
-                        map <string, int>::iterator  mapit;
-                        int vocabcount = 0;
-                        mapit = docwords.find(wordit->first);
-                        if (mapit != docwords.end())
-                        {
-                            vocabcount = mapit->second;
-                        }
-                        wordcount.push_back(vocabcount);
-                        //cout << "word Count: " << vocabcount << "\n";
-                    }
-                    //cout << "words: " << wordcount.size() << "\n";
-                    DocumentWordMatrix.push_back(wordcount);
                     newfile.close(); //close the file object.
                 }          
             }
@@ -281,14 +325,14 @@ void CorpusClass::run_iteration()
                 //cout << " " << mysum << " ";
             }
             //cout << "\n";
-            if (mysum != 0)
-                for(int topicindex = 0; topicindex < number_of_topics; topicindex++)
-                {
-                    //cout << "E Topic2 \n";
-                    double** ptopicarray = pdocarray[docindex];
-                    double* pwordarray = ptopicarray[topicindex];
+            for(int topicindex = 0; topicindex < number_of_topics; topicindex++)
+            {
+                //cout << "E Topic2 \n";
+                double** ptopicarray = pdocarray[docindex];
+                double* pwordarray = ptopicarray[topicindex];
+                if (mysum != 0)
                     pwordarray[wordindex] = pwordarray[wordindex]/mysum;
-                }
+            }
         }
    }
     
@@ -312,12 +356,12 @@ void CorpusClass::run_iteration()
             tonormal += mysum;
         }
         // normalize
-        if (tonormal != 0)
-            for(int topicindex = 0; topicindex < number_of_topics; topicindex++)
-            {
+        for(int topicindex = 0; topicindex < number_of_topics; topicindex++)
+        {
+            if (tonormal != 0)
                 DocTopicProb[docindex][topicindex] = DocTopicProb[docindex][topicindex]/tonormal;
-                //cout << " " << DocTopicProb[docindex][topicindex] << " ";
-            }
+            //cout << " " << DocTopicProb[docindex][topicindex] << " ";
+        }
         //cout << "\n";
     }
     for(int topicindex = 0; topicindex < number_of_topics; topicindex++)
@@ -337,12 +381,12 @@ void CorpusClass::run_iteration()
             tonormal += mysum;
             //cout << " " << tonormal << " ";
         }
-        if (tonormal != 0)
-            for(int wordindex = 0; wordindex < VocublarySize; wordindex++)
-            {
+        for(int wordindex = 0; wordindex < VocublarySize; wordindex++)
+        {
+            if (tonormal != 0)
                 TopicWordProb[topicindex][wordindex] = TopicWordProb[topicindex][wordindex]/tonormal;
-                //cout << " " << TopicWordProb[topicindex][wordindex] << " ";
-            }
+            //cout << " " << TopicWordProb[topicindex][wordindex] << " ";
+        }
         //cout << "\n";
     }
 }
