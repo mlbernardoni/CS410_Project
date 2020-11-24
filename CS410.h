@@ -35,6 +35,9 @@ public:
     void write_topics();
    
     string document_path;
+    string output_path;
+    string time_slice;
+    string cur_filename;
     int number_of_topics;
     int max_iterations;
     double epsilon;

@@ -16,6 +16,7 @@ bool sortbysec(const pair<string,double> &a,
     Constructor
  */
 CorpusClass::CorpusClass() {
+    pdocarray = 0;
 }
 
 /*
@@ -27,7 +28,8 @@ CorpusClass::~CorpusClass() {
 void CorpusClass::write_topics()
 {
     fstream newfileout;
-    newfileout.open("topic_out.csv",ios::out); //open a file to perform write operation using file object
+    string outfile = output_path + "\\" + time_slice + ".csv";
+    newfileout.open(outfile,ios::out); //open a file to perform write operation using file object
     if (newfileout.is_open()) //checking whether the file is open
     {   
         
@@ -58,16 +60,22 @@ void CorpusClass::write_topics()
  */
 void CorpusClass::build_vocabulary()
 {
-    string datadate = "2000.11.05";
-    string datadir = "c:\\programs\\CS410_Pres_newalpha";
+    string datadate = time_slice;
+    string datadir = document_path;
     string myfile;
 
 
     struct dirent *entry = nullptr;
     DIR *dp = nullptr;
+
     DocumentNumber = 0;
+    VocublarySize = 0;
     VocabularyMap.clear();
     DocumentWordMatrix.clear();
+    VocabularyList.clear();
+    TopicWordProb.clear();
+    DocTopicProb.clear();
+    delete_array(); // pdocarray
     
     //int count = 0;
     dp = opendir(datadir.c_str());
@@ -107,14 +115,13 @@ void CorpusClass::build_vocabulary()
                             {
                                 VocabularyMap.insert(make_pair(newword, 1));
                                 VocabularyList.push_back(newword);
-                            }
-                            
+                            } 
                         }
                     }
 
                     //newfile.clear();
                     //newfile.seekg(0, ios::beg);
-                        newfile.close(); //close the file object.
+                    newfile.close(); //close the file object.
                 }   
             }                
         }
@@ -267,37 +274,27 @@ void CorpusClass::setup_array()
 
 void CorpusClass::delete_array()
 {
-    for (int i = 0; i < DocumentNumber; i++)
+    if ( pdocarray != 0)
     {
-        double** ptopicarray = pdocarray[i];
-        for (int ii = 0; ii < number_of_topics; ii++)
+        for (int i = 0; i < DocumentNumber; i++)
         {
-            double* pwordarray = ptopicarray[ii];
-            delete[] pwordarray;
+            double** ptopicarray = pdocarray[i];
+            for (int ii = 0; ii < number_of_topics; ii++)
+            {
+                double* pwordarray = ptopicarray[ii];
+                delete[] pwordarray;
+            }
+            delete[] ptopicarray;
         }
-        delete[] ptopicarray;
+        delete[] pdocarray;    
     }
-    delete[] pdocarray;
+    pdocarray = 0;
 }
 
 void CorpusClass::run_iteration()
 {
     //cout << "E Step \n";
     //cout << "Allocated doc array \n";
-    // IS THIS EVEN NECESSARY?
-    /*
-    for (int i = 0; i < DocumentNumber; i++)
-    {
-        double** ptopicarray = pdocarray[i];
-        for (int ii = 0; ii < number_of_topics; ii++)
-        {F
-            double* pwordarray = ptopicarray[ii];
-            for (int iii = 0; iii < VocublarySize; iii++)
-                pwordarray[iii] = 1;
-        }
-    }
-    cout << "E Initialization Complete \n";
-    */
     for(int docindex = 0; docindex < DocumentNumber; docindex++)
     {
         //cout << "E Doc \n";
@@ -458,22 +455,40 @@ void CorpusClass::PLSA()
 
 int main () {
     CorpusClass corpus;
-    //corpus.document_path = "data/DBLP2.txt";
-    corpus.document_path = "data/test.txt";
+    corpus.document_path = "c:\\programs\\CS410_Pres_newalpha";
+    corpus.output_path = "c:\\programs\\CS410_Pres_Output";
+    corpus.time_slice = "2000.11.05";
     corpus.number_of_topics = 30;
     corpus.max_iterations = 250;
     corpus.epsilon = 0.001;
     
-    corpus.build_vocabulary();
-    cout << "build_vocabulary \n";
-    corpus.initialize_prob();
-    cout << "initialize_prob \n";
-    corpus.setup_array();
-    cout << "setup_array \n";
-  
-    corpus.PLSA();
+    fstream newfile;
+    newfile.open("timeslices.txt",ios::in); //open a file to perform read operation using file object
+    if (newfile.is_open()) //checking whether the file is open
+    {   
+        string tp;
+        while(getline(newfile, tp)) //read data from file object and put it into string.
+        {
+            istringstream iss(tp);
+            vector<string> results(istream_iterator<string>{iss}, istream_iterator<string>());      
+            for (vector<string>::iterator wordit = results.begin() ; wordit != results.end(); ++wordit)
+            {
+                corpus.time_slice = *wordit;
+                corpus.build_vocabulary();
+                cout << "build_vocabulary \n";
+                corpus.initialize_prob();
+                cout << "initialize_prob \n";
+                corpus.setup_array();
+                cout << "setup_array \n";
+              
+                corpus.PLSA();
+                
+                corpus.delete_array();
+            }
+        }
+     }
+   
     
-    corpus.delete_array();
 
 
     return 0;
