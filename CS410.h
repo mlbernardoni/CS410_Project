@@ -32,6 +32,7 @@ public:
     void run_iteration();
     double calculate_likelyhood();
     void PLSA();
+    void write_topics();
    
     string document_path;
     int number_of_topics;
@@ -43,6 +44,7 @@ public:
     //vector<map <string, int>> DocumentWords;
     int VocublarySize;
     map <string, int> VocabularyMap;
+    vector<string> VocabularyList;
     
     vector<vector<int>> DocumentWordMatrix;
     
